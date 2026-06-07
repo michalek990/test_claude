@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TypeScript — Język, Który Zmienił Wszystko</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0F172A;
+      --surface:   #1E293B;
+      --surface2:  #334155;
+      --text:      #F8FAFC;
+      --muted:     #94A3B8;
+      --green:     #22C55E;
+      --blue:      #3B82F6;
+      --purple:    #A78BFA;
+      --orange:    #FB923C;
+      --red:       #F87171;
+      --border:    rgba(148,163,184,.15);
+      --mono:      'JetBrains Mono', monospace;
+      --sans:      'IBM Plex Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow-x: hidden;
+      line-height: 1.65;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 1rem; left: 1rem; right: 1rem;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .75rem 1.5rem;
+      background: rgba(15,23,42,.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+    }
+    .nav-logo {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--blue);
+      letter-spacing: -.02em;
+    }
+    .nav-logo span { color: var(--green); }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      font-size: .875rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color .2s;
+      cursor: pointer;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      z-index: 100;
+      width: 0%;
+      transition: width .1s linear;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-left {
+      opacity: 0;
+      transform: translateX(-50px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .reveal-left.visible { opacity: 1; transform: translateX(0); }
+    .reveal-right {
+      opacity: 0;
+      transform: translateX(50px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal, .reveal-left, .reveal-right {
+        opacity: 1; transform: none; transition: none;
+      }
+    }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 1.5rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(59,130,246,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,.06) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59,130,246,.15) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse-glow 4s ease-in-out infinite;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: .5; transform: translate(-50%,-50%) scale(1); }
+      50%       { opacity: 1;  transform: translate(-50%,-50%) scale(1.1); }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .35rem 1rem;
+      background: rgba(59,130,246,.1);
+      border: 1px solid rgba(59,130,246,.3);
+      border-radius: 2rem;
+      font-family: var(--mono);
+      font-size: .8rem;
+      color: var(--blue);
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    .hero-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: blink 1.5s ease infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; } 50% { opacity: .2; }
+    }
+
+    .hero-title {
+      font-size: clamp(2.8rem, 8vw, 6rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -.04em;
+      position: relative;
+    }
+    .hero-title .ts { color: var(--blue); }
+    .hero-title .accent { color: var(--green); }
+
+    .hero-sub {
+      max-width: 580px;
+      color: var(--muted);
+      font-size: 1.125rem;
+      margin: 1.5rem auto 2.5rem;
+      line-height: 1.7;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .85rem 2rem;
+      background: var(--blue);
+      color: #fff;
+      border-radius: .75rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform .2s, box-shadow .2s;
+      cursor: pointer;
+      border: none;
+      font-family: var(--sans);
+      font-size: 1rem;
+    }
+    .hero-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(59,130,246,.35);
+    }
+
+    .hero-code {
+      margin-top: 4rem;
+      position: relative;
+      max-width: 560px;
+      width: 100%;
+    }
+    .code-window {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      overflow: hidden;
+      text-align: left;
+      box-shadow: 0 32px 64px rgba(0,0,0,.4);
+    }
+    .code-bar {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .75rem 1rem;
+      background: rgba(255,255,255,.03);
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #FF5F57; }
+    .dot-y { background: #FFBD2E; }
+    .dot-g { background: #28CA41; }
+    .code-filename {
+      margin-left: .5rem;
+      font-family: var(--mono);
+      font-size: .8rem;
+      color: var(--muted);
+    }
+    pre {
+      padding: 1.5rem;
+      font-family: var(--mono);
+      font-size: .875rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    .kw  { color: var(--purple); }
+    .ty  { color: var(--blue); }
+    .str { color: var(--green); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .fn  { color: var(--orange); }
+    .num { color: #F59E0B; }
+
+    /* ── SECTIONS COMMON ── */
+    section {
+      padding: 7rem 1.5rem;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-family: var(--mono);
+      font-size: .8rem;
+      color: var(--green);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -.03em;
+      margin-bottom: 1.25rem;
+    }
+    .section-desc {
+      color: var(--muted);
+      max-width: 560px;
+      font-size: 1.05rem;
+      line-height: 1.75;
+    }
+
+    /* ── STORY CHAPTERS ── */
+    .story-chapter {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+    .story-chapter.reverse { direction: rtl; }
+    .story-chapter.reverse > * { direction: ltr; }
+
+    @media (max-width: 768px) {
+      .story-chapter { grid-template-columns: 1fr; gap: 3rem; direction: ltr; }
+      .story-chapter.reverse { direction: ltr; }
+    }
+
+    .chapter-num {
+      font-family: var(--mono);
+      font-size: .8rem;
+      color: var(--blue);
+      margin-bottom: .75rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    .chapter-num::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      max-width: 60px;
+    }
+
+    .chapter-body { display: flex; flex-direction: column; gap: 1.25rem; }
+    .chapter-body h2 {
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -.025em;
+    }
+    .chapter-body p { color: var(--muted); line-height: 1.75; }
+
+    .feature-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: .5rem;
+    }
+    .pill {
+      padding: .3rem .85rem;
+      border-radius: 2rem;
+      font-family: var(--mono);
+      font-size: .8rem;
+      border: 1px solid;
+    }
+    .pill-blue   { color: var(--blue);   border-color: rgba(59,130,246,.3);   background: rgba(59,130,246,.08); }
+    .pill-green  { color: var(--green);  border-color: rgba(34,197,94,.3);    background: rgba(34,197,94,.08); }
+    .pill-purple { color: var(--purple); border-color: rgba(167,139,250,.3);  background: rgba(167,139,250,.08); }
+    .pill-orange { color: var(--orange); border-color: rgba(251,146,60,.3);   background: rgba(251,146,60,.08); }
+
+    /* ── VISUAL CARDS ── */
+    .visual-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      overflow: hidden;
+      position: relative;
+    }
+    .visual-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 20%, rgba(59,130,246,.08), transparent 60%);
+      pointer-events: none;
+    }
+
+    /* ── ERROR VS TS COMPARE ── */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 640px) { .compare-grid { grid-template-columns: 1fr; } }
+    .compare-pane {
+      border-radius: .875rem;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .compare-header {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .6rem 1rem;
+      font-family: var(--mono);
+      font-size: .75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-header.bad  { background: rgba(248,113,113,.06); color: var(--red); }
+    .compare-header.good { background: rgba(34,197,94,.06);   color: var(--green); }
+    .compare-pane pre { padding: 1rem; font-size: .82rem; }
+
+    /* ── TIMELINE ── */
+    .timeline {
+      position: relative;
+      padding-left: 2.5rem;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: .75rem;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--blue), var(--green), transparent);
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 3rem;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -1.875rem;
+      top: .4rem;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 12px rgba(59,130,246,.5);
+    }
+    .timeline-year {
+      font-family: var(--mono);
+      font-size: .8rem;
+      color: var(--blue);
+      margin-bottom: .3rem;
+    }
+    .timeline-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: .4rem;
+    }
+    .timeline-desc { color: var(--muted); font-size: .925rem; line-height: 1.65; }
+
+    /* ── BENTO FEATURES ── */
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: minmax(180px, auto);
+      gap: 1rem;
+    }
+    @media (max-width: 900px) { .bento { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .bento { grid-template-columns: 1fr; } }
+
+    .bento-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 1.75rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      cursor: default;
+    }
+    .bento-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.3);
+      border-color: rgba(59,130,246,.3);
+    }
+    .bento-card.wide   { grid-column: span 2; }
+    .bento-card.tall   { grid-row: span 2; }
+    @media (max-width: 900px) { .bento-card.wide { grid-column: span 1; } }
+
+    .bento-icon {
+      width: 44px; height: 44px;
+      border-radius: .75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .bento-icon svg { width: 22px; height: 22px; }
+    .bento-icon.blue   { background: rgba(59,130,246,.15); color: var(--blue); }
+    .bento-icon.green  { background: rgba(34,197,94,.15);  color: var(--green); }
+    .bento-icon.purple { background: rgba(167,139,250,.15);color: var(--purple); }
+    .bento-icon.orange { background: rgba(251,146,60,.15);  color: var(--orange); }
+    .bento-icon.red    { background: rgba(248,113,113,.15); color: var(--red); }
+
+    .bento-title { font-size: 1rem; font-weight: 600; margin-bottom: .4rem; }
+    .bento-desc  { color: var(--muted); font-size: .875rem; line-height: 1.65; }
+
+    .bento-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: .12;
+      pointer-events: none;
+    }
+
+    /* ── STATS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 400px) { .stats-row { grid-template-columns: 1fr; } }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.75rem;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: var(--mono);
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--blue);
+      line-height: 1;
+      margin-bottom: .4rem;
+    }
+    .stat-label { color: var(--muted); font-size: .875rem; }
+
+    /* ── CODE TABS ── */
+    .code-tabs { display: flex; gap: .5rem; margin-bottom: -1px; }
+    .tab-btn {
+      padding: .5rem 1rem;
+      font-family: var(--mono);
+      font-size: .8rem;
+      border-radius: .5rem .5rem 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .tab-btn.active { background: var(--surface); color: var(--text); border-color: var(--border); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── QUOTE ── */
+    .big-quote {
+      border-left: 3px solid var(--blue);
+      padding: 1.5rem 2rem;
+      background: rgba(59,130,246,.05);
+      border-radius: 0 .75rem .75rem 0;
+    }
+    .big-quote blockquote {
+      font-size: 1.25rem;
+      font-style: italic;
+      line-height: 1.7;
+      margin-bottom: .75rem;
+    }
+    .big-quote cite {
+      font-family: var(--mono);
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    /* ── ADOPTION BARS ── */
+    .adoption-list { display: flex; flex-direction: column; gap: 1.25rem; }
+    .adoption-item { display: flex; flex-direction: column; gap: .4rem; }
+    .adoption-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .adoption-name { font-size: .9rem; font-weight: 500; }
+    .adoption-pct  { font-family: var(--mono); font-size: .85rem; color: var(--green); }
+    .adoption-track {
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .adoption-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      width: 0%;
+      transition: width 1.2s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── SCROLL CHAPTERS ── */
+    .scroll-chapters {
+      position: relative;
+    }
+    .scroll-chapter {
+      border-left: 2px solid var(--border);
+      padding-left: 2rem;
+      margin-bottom: 4rem;
+      position: relative;
+    }
+    .scroll-chapter.active { border-color: var(--blue); }
+    .scroll-chapter::before {
+      content: '';
+      position: absolute;
+      left: -6px; top: 0;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background .3s;
+    }
+    .scroll-chapter.active::before { background: var(--blue); }
+
+    /* ── CTA SECTION ── */
+    #cta {
+      text-align: center;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%,
+        rgba(59,130,246,.12), transparent);
+    }
+    .cta-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      letter-spacing: -.04em;
+      margin-bottom: 1rem;
+    }
+    .cta-sub {
+      color: var(--muted);
+      max-width: 480px;
+      margin: 0 auto 2.5rem;
+      font-size: 1.05rem;
+    }
+    .cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      padding: .85rem 2rem;
+      background: var(--blue);
+      color: #fff;
+      border-radius: .75rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform .2s, box-shadow .2s;
+      cursor: pointer;
+      border: none;
+      font-size: 1rem;
+      font-family: var(--sans);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(59,130,246,.35);
+    }
+    .btn-secondary {
+      padding: .85rem 2rem;
+      background: transparent;
+      color: var(--text);
+      border-radius: .75rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      transition: border-color .2s, background .2s;
+      cursor: pointer;
+      font-size: 1rem;
+      font-family: var(--sans);
+    }
+    .btn-secondary:hover {
+      border-color: var(--blue);
+      background: rgba(59,130,246,.05);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 2rem 1.5rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--muted);
+      font-size: .875rem;
+      font-family: var(--mono);
+    }
+
+    /* divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 0 auto;
+      max-width: 800px;
+    }
+
+    /* ── FLOATING PARTICLES ── */
+    .particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .particle {
+      position: absolute;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--blue);
+      opacity: 0;
+      animation: float-up linear infinite;
+    }
+    @keyframes float-up {
+      0%   { opacity: 0;   transform: translateY(0) scale(0); }
+      10%  { opacity: .6; }
+      90%  { opacity: .2; }
+      100% { opacity: 0;   transform: translateY(-400px) scale(.5); }
+    }
+
+    /* highlight in code */
+    .hl { background: rgba(59,130,246,.12); border-radius: 3px; padding: 0 2px; }
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar" role="progressbar" aria-label="Postęp czytania"></div>
+
+<!-- NAV -->
+<nav aria-label="Nawigacja główna">
+  <div class="nav-logo">Type<span>Script</span></div>
+  <div class="nav-links">
+    <a href="#historia" onclick="scrollTo('#historia')">Historia</a>
+    <a href="#cechy"    onclick="scrollTo('#cechy')">Cechy</a>
+    <a href="#ekosystem" onclick="scrollTo('#ekosystem')">Ekosystem</a>
+    <a href="#cta"      onclick="scrollTo('#cta')">Start</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero" aria-labelledby="hero-title">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <div class="hero-badge">TypeScript v5.0+</div>
+
+  <h1 class="hero-title reveal" id="hero-title">
+    JavaScript<br />z <span class="ts">super</span><span class="accent">mocami</span>
+  </h1>
+
+  <p class="hero-sub reveal">
+    TypeScript to nie tylko język — to filozofia pisania kodu,
+    który <strong>mówi sam za siebie</strong>, nie psuje się w nocy
+    i sprawia, że Twój zespół śpi spokojnie.
+  </p>
+
+  <a href="#historia" class="hero-cta reveal" aria-label="Poznaj historię TypeScript">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    Poznaj historię
+  </a>
+
+  <div class="hero-code reveal">
+    <div class="code-window">
+      <div class="code-bar" aria-hidden="true">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        <span class="code-filename">hello.ts</span>
+      </div>
+      <pre aria-label="Przykład kodu TypeScript"><code><span class="cm">// TypeScript wie, czego potrzebujesz</span>
+<span class="kw">interface</span> <span class="ty">Developer</span> {
+  name<span class="ty">: string</span>;
+  skills<span class="ty">: string[]</span>;
+  yearsOfExp<span class="ty">: number</span>;
+}
+
+<span class="kw">function</span> <span class="fn">greet</span>(dev<span class="ty">: Developer</span>)<span class="ty">: string</span> {
+  <span class="kw">return</span> <span class="str">`Cześć, <span class="hl">${dev.name}</span>! 🚀`</span>;
+}
+
+<span class="cm">// Błąd? Kompilator złapie to za Ciebie</span>
+<span class="fn">greet</span>({ name: <span class="str">"Michał"</span>, skills: [<span class="str">"TS"</span>], yearsOfExp: <span class="num">3</span> });</code></pre>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ROZDZIAŁ 1 — HISTORIA -->
+<section id="historia" aria-labelledby="historia-title">
+  <div class="container">
+    <div class="story-chapter">
+      <div class="chapter-body reveal-left">
+        <div class="chapter-num">Rozdział 01</div>
+        <h2 id="historia-title">Rok 2012.<br />Microsoft zmienia zasady gry.</h2>
+        <p>
+          Anders Hejlsberg — twórca C# — zamiast walczyć z JavaScript,
+          postanowił go <em>ulepszyć</em>. TypeScript miał rozwiązać
+          jeden konkretny problem: jak pisać wielki, złożony kod
+          w języku zaprojektowanym na weekend?
+        </p>
+        <p>
+          Odpowiedź była elegancka: <strong>zostań nadzbiorem</strong>.
+          Każdy poprawny JS jest poprawnym TS. Zero bariery wejścia —
+          maksymalna nagroda.
+        </p>
+        <div class="feature-pills">
+          <span class="pill pill-blue">Open Source 2012</span>
+          <span class="pill pill-green">Anders Hejlsberg</span>
+          <span class="pill pill-purple">Microsoft</span>
+        </div>
+      </div>
+      <div class="reveal-right">
+        <div class="timeline" aria-label="Oś czasu TypeScript">
+          <div class="timeline-item">
+            <div class="timeline-year">2012</div>
+            <div class="timeline-title">TypeScript 0.8</div>
+            <div class="timeline-desc">Pierwsze publiczne wydanie. Świat patrzy sceptycznie.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-year">2014</div>
+            <div class="timeline-title">Angular 2 wybiera TypeScript</div>
+            <div class="timeline-desc">Google i Microsoft razem — ekosystem eksploduje.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-year">2016</div>
+            <div class="timeline-title">VS Code natywne wsparcie</div>
+            <div class="timeline-desc">IntelliSense, autouzupełnianie, refaktoring — bezpłatnie.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-year">2020</div>
+            <div class="timeline-title">Numer 1 w badaniach</div>
+            <div class="timeline-desc">State of JS: TypeScript najpopularniejszy "smakownik" JS.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-year">2024</div>
+            <div class="timeline-title">TypeScript 5.x</div>
+            <div class="timeline-desc">Decorators, const type params, nowe wydajnościowe ulepszenia.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ROZDZIAŁ 2 — PROBLEM Z JS -->
+<section aria-labelledby="problem-title">
+  <div class="container">
+    <div class="story-chapter reverse">
+      <div class="chapter-body reveal-right">
+        <div class="chapter-num">Rozdział 02</div>
+        <h2 id="problem-title">JavaScript:<br />potęga i przekleństwo.</h2>
+        <p>
+          JS daje Ci wolność. Możesz przypisać cokolwiek do czegokolwiek.
+          Number do stringa. Undefined do obiektu. Function do arraya.
+          W małym projekcie — to wygoda. W dużym — <em>horror</em>.
+        </p>
+        <p>
+          TypeScript stawia granice. Ale to granice, które <strong>chronią</strong>,
+          nie więzią. Jak barierki na górskiej drodze.
+        </p>
+        <div class="big-quote">
+          <blockquote>"TypeScript nie sprawia, że piszesz mniej kodu. Sprawia, że piszesz właściwy kod."</blockquote>
+          <cite>— Anders Hejlsberg, twórca TypeScript</cite>
+        </div>
+      </div>
+      <div class="reveal-left">
+        <div class="visual-card">
+          <div style="padding: 1.5rem;">
+            <div class="code-tabs" role="tablist" aria-label="Porównanie JS i TS">
+              <button class="tab-btn active" role="tab" aria-selected="true" data-tab="compare" onclick="switchTab('compare', this)">Porównanie</button>
+              <button class="tab-btn" role="tab" aria-selected="false" data-tab="error" onclick="switchTab('error', this)">Błędy</button>
+            </div>
+            <div id="compare" class="tab-content active" role="tabpanel">
+              <div class="compare-grid">
+                <div class="compare-pane">
+                  <div class="compare-header bad">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    JavaScript
+                  </div>
+                  <pre><code><span class="kw">function</span> <span class="fn">add</span>(a, b) {
+  <span class="kw">return</span> a + b;
+}
+
+<span class="cm">// Wynik: "23" 😱</span>
+<span class="fn">add</span>(<span class="str">"2"</span>, <span class="num">3</span>);</code></pre>
+                </div>
+                <div class="compare-pane">
+                  <div class="compare-header good">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    TypeScript
+                  </div>
+                  <pre><code><span class="kw">function</span> <span class="fn">add</span>(
+  a<span class="ty">: number</span>,
+  b<span class="ty">: number</span>
+)<span class="ty">: number</span> {
+  <span class="kw">return</span> a + b;
+}</code></pre>
+                </div>
+              </div>
+            </div>
+            <div id="error" class="tab-content" role="tabpanel">
+              <pre><code><span class="cm">// TS łapie błąd PRZED uruchomieniem</span>
+
+<span class="kw">const</span> user = {
+  name<span class="ty">: string</span>,
+  age<span class="ty">: number</span>
+};
+
+<span class="cm">// ❌ Error: Property 'email'</span>
+<span class="cm">//    does not exist on type</span>
+<span class="fn">console</span>.log(user.<span style="color:var(--red)">email</span>);
+
+<span class="cm">// ✅ To działa zawsze</span>
+<span class="fn">console</span>.log(user.name);</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STATYSTYKI -->
+<section aria-labelledby="stats-title">
+  <div class="container">
+    <div class="section-label">Liczby mówią same za siebie</div>
+    <h2 class="section-title reveal" id="stats-title">TypeScript w liczbach</h2>
+    <div class="stats-row" role="list">
+      <div class="stat-card reveal" role="listitem">
+        <div class="stat-num" data-target="94">0</div>
+        <div class="stat-label">% top 100 npm packages ma typy TS</div>
+      </div>
+      <div class="stat-card reveal" role="listitem">
+        <div class="stat-num" data-target="78">0</div>
+        <div class="stat-label">% deweloperów JS używa TypeScript</div>
+      </div>
+      <div class="stat-card reveal" role="listitem">
+        <div class="stat-num" data-target="5">0</div>
+        <div class="stat-label">mln pobrań tygodniowo z npm</div>
+      </div>
+      <div class="stat-card reveal" role="listitem">
+        <div class="stat-num" data-target="12">0</div>
+        <div class="stat-label">lat w produkcji na całym świecie</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ROZDZIAŁ 3 — CECHY -->
+<section id="cechy" aria-labelledby="cechy-title">
+  <div class="container">
+    <div class="section-label">Supermoc po supermocy</div>
+    <h2 class="section-title reveal" id="cechy-title">Co dostajesz za darmo?</h2>
+    <p class="section-desc reveal">Każda z tych funkcji to godziny zaoszczędzonego debugowania i pewność siebie przy każdym commicie.</p>
+
+    <div class="bento" style="margin-top: 3rem;" role="list">
+
+      <div class="bento-card wide reveal" role="listitem">
+        <div class="bento-glow" style="width:300px;height:300px;background:var(--blue);top:-100px;left:-50px;"></div>
+        <div class="bento-icon blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="bento-title">Statyczne typowanie</div>
+        <div class="bento-desc">Definiujesz kształt danych raz — kompilator pilnuje reszty. Żadnych niespodzianek w runtime, żadnych <code style="color:var(--red)">cannot read property of undefined</code>.</div>
+        <div class="feature-pills" style="margin-top:1rem;">
+          <span class="pill pill-blue">interfaces</span>
+          <span class="pill pill-blue">types</span>
+          <span class="pill pill-blue">enums</span>
+        </div>
+      </div>
+
+      <div class="bento-card reveal" role="listitem">
+        <div class="bento-glow" style="width:200px;height:200px;background:var(--green);top:-50px;right:-50px;"></div>
+        <div class="bento-icon green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div class="bento-title">IntelliSense na sterydach</div>
+        <div class="bento-desc">Autouzupełnianie które naprawdę wie, co robisz. Refaktoring bez strachu.</div>
+      </div>
+
+      <div class="bento-card reveal" role="listitem">
+        <div class="bento-icon purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="bento-title">Generics</div>
+        <div class="bento-desc">Piszesz funkcje raz, działają dla każdego typu. DRY na poziomie systemu typów.</div>
+      </div>
+
+      <div class="bento-card reveal" role="listitem">
+        <div class="bento-glow" style="width:200px;height:200px;background:var(--orange);bottom:-50px;left:-50px;"></div>
+        <div class="bento-icon orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="bento-title">Type inference</div>
+        <div class="bento-desc">TypeScript często wie, jaki typ to jest — nawet bez Twoich adnotacji. Mniej pisania, ta sama ochrona.</div>
+      </div>
+
+      <div class="bento-card tall reveal" role="listitem">
+        <div class="bento-icon blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <div class="bento-title">Kompatybilność z ekosystemem</div>
+        <div class="bento-desc">React, Node, Next.js, Vue, NestJS — wszystkie mają natywne wsparcie TypeScript. Nie wybierasz między TS a frameworkiem. Masz oboje.</div>
+        <div style="margin-top: 1.5rem;">
+          <pre style="padding: 1rem; background: var(--bg); border-radius: .75rem; font-size: .8rem;"><code><span class="cm">// React + TypeScript</span>
+<span class="kw">interface</span> <span class="ty">Props</span> {
+  title<span class="ty">: string</span>;
+  count<span class="ty">: number</span>;
+}
+
+<span class="kw">const</span> <span class="fn">Card</span> = ({
+  title, count
+}<span class="ty">: Props</span>) => (
+  &lt;<span class="ty">div</span>&gt;{title}: {count}&lt;/<span class="ty">div</span>&gt;
+);</code></pre>
+        </div>
+      </div>
+
+      <div class="bento-card reveal" role="listitem">
+        <div class="bento-icon red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="bento-title">Błędy w czasie kompilacji</div>
+        <div class="bento-desc">Zamiast odkrywać bugi o 2 w nocy po deploymencie — dostajesz czerwony podkreślnik w edytorze.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ROZDZIAŁ 4 — EKOSYSTEM -->
+<section id="ekosystem" aria-labelledby="ekosystem-title">
+  <div class="container">
+    <div class="story-chapter">
+      <div class="chapter-body reveal-left">
+        <div class="chapter-num">Rozdział 03</div>
+        <h2 id="ekosystem-title">Kto używa<br />TypeScript?</h2>
+        <p>
+          Nie pytaj czy używać TypeScript. Zapytaj, czy możesz sobie pozwolić
+          na <em>nieużywanie</em> go. Największe firmy świata
+          już podjęły tę decyzję.
+        </p>
+        <div class="adoption-list" aria-label="Adopcja TypeScript przez firmy">
+          <div class="adoption-item">
+            <div class="adoption-meta">
+              <span class="adoption-name">Microsoft</span>
+              <span class="adoption-pct">100%</span>
+            </div>
+            <div class="adoption-track"><div class="adoption-fill" data-width="100"></div></div>
+          </div>
+          <div class="adoption-item">
+            <div class="adoption-meta">
+              <span class="adoption-name">Google (Angular, GCP)</span>
+              <span class="adoption-pct">98%</span>
+            </div>
+            <div class="adoption-track"><div class="adoption-fill" data-width="98"></div></div>
+          </div>
+          <div class="adoption-item">
+            <div class="adoption-meta">
+              <span class="adoption-name">Airbnb</span>
+              <span class="adoption-pct">95%</span>
+            </div>
+            <div class="adoption-track"><div class="adoption-fill" data-width="95"></div></div>
+          </div>
+          <div class="adoption-item">
+            <div class="adoption-meta">
+              <span class="adoption-name">Slack</span>
+              <span class="adoption-pct">90%</span>
+            </div>
+            <div class="adoption-track"><div class="adoption-fill" data-width="90"></div></div>
+          </div>
+          <div class="adoption-item">
+            <div class="adoption-meta">
+              <span class="adoption-name">Dropbox</span>
+              <span class="adoption-pct">88%</span>
+            </div>
+            <div class="adoption-track"><div class="adoption-fill" data-width="88"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal-right">
+        <div class="visual-card" style="padding: 2rem;">
+          <div class="section-label" style="margin-bottom:1.5rem;">Kiedy TypeScript błyszczy najbardziej</div>
+          <div class="scroll-chapters" role="list">
+            <div class="scroll-chapter active" role="listitem">
+              <div class="bento-title" style="margin-bottom:.4rem;">Duże zespoły</div>
+              <div class="bento-desc">Kiedy 10+ developerów pracuje nad tym samym kodem, typy są wspólnym językiem. Nikt nie musi pytać "co to zwraca?"</div>
+            </div>
+            <div class="scroll-chapter" role="listitem">
+              <div class="bento-title" style="margin-bottom:.4rem;">Długoterminowe projekty</div>
+              <div class="bento-desc">Kod pisany 3 lata temu nadal jest zrozumiały. Refaktoring nie jest aktem wiary — jest aktem kliknięcia.</div>
+            </div>
+            <div class="scroll-chapter" role="listitem">
+              <div class="bento-title" style="margin-bottom:.4rem;">API i integracje</div>
+              <div class="bento-desc">Typy generowane z OpenAPI, GraphQL, Prisma — Twój kod zawsze wie, jakiej formy danych oczekiwać.</div>
+            </div>
+            <div class="scroll-chapter" role="listitem">
+              <div class="bento-title" style="margin-bottom:.4rem;">Onboarding nowych devów</div>
+              <div class="bento-desc">Nowy developer widzi typy, rozumie kontrakt, pisze poprawny kod w dzień 1. Bez legacy dokumentacji.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CTA -->
+<section id="cta" aria-labelledby="cta-title">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label" style="text-align:center;">Czas działać</div>
+      <h2 class="cta-title" id="cta-title">
+        Zacznij pisać<br /><span style="color:var(--blue)">pewny</span> kod dziś.
+      </h2>
+      <p class="cta-sub">
+        Jedna komenda. Zero wymówek. TypeScript jest gotowy
+        — pytanie, czy Ty jesteś gotowy na TypeScript.
+      </p>
+
+      <div class="code-window" style="max-width:480px;margin:0 auto 2.5rem;">
+        <div class="code-bar" aria-hidden="true">
+          <span class="dot dot-r"></span>
+          <span class="dot dot-y"></span>
+          <span class="dot dot-g"></span>
+          <span class="code-filename">terminal</span>
+        </div>
+        <pre><code><span class="cm"># Instalacja TypeScript</span>
+<span class="str">$</span> npm install -g typescript
+
+<span class="cm"># Inicjalizacja projektu</span>
+<span class="str">$</span> tsc --init
+
+<span class="cm"># Kompilacja</span>
+<span class="str">$</span> tsc hello.ts</code></pre>
+      </div>
+
+      <div class="cta-btns">
+        <a href="https://www.typescriptlang.org/docs/" target="_blank" rel="noopener" class="btn-primary">
+          Oficjalna dokumentacja
+        </a>
+        <a href="https://www.typescriptlang.org/play" target="_blank" rel="noopener" class="btn-secondary">
+          Wypróbuj w przeglądarce
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Zbudowane z TypeScript&nbsp;&amp;&nbsp;pasją &nbsp;·&nbsp;
+    <a href="https://www.typescriptlang.org" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;">typescriptlang.org</a>
+  </p>
+</footer>
+
+<script>
+  // ── PROGRESS BAR ──
+  const bar = document.getElementById('progressBar');
+  function updateProgress() {
+    const scrolled = window.scrollY;
+    const total    = document.body.scrollHeight - window.innerHeight;
+    bar.style.width = (total > 0 ? (scrolled / total) * 100 : 0) + '%';
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+
+  // ── SCROLL REVEAL ──
+  const revealEls = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+  const observer  = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+  revealEls.forEach(el => observer.observe(el));
+
+  // ── COUNTER ANIMATION ──
+  function animateCounter(el) {
+    const target = parseInt(el.dataset.target);
+    const suffix = el.textContent.includes('mln') ? ' mln' : '';
+    const duration = 1400;
+    const start    = performance.now();
+    const update   = (now) => {
+      const p = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(ease * target) + (suffix || '%');
+      if (p < 1) requestAnimationFrame(update);
+      else el.textContent = target + (el.closest('.stat-card').querySelector('.stat-label').textContent.includes('mln') ? ' mln' : '%');
+    };
+    requestAnimationFrame(update);
+  }
+
+  const counterObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCounter(e.target);
+        counterObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.stat-num[data-target]').forEach(el => counterObserver.observe(el));
+
+  // ── ADOPTION BARS ──
+  const barObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.adoption-fill').forEach(fill => {
+          fill.style.width = fill.dataset.width + '%';
+        });
+        barObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  const adoptionSection = document.querySelector('.adoption-list');
+  if (adoptionSection) barObserver.observe(adoptionSection);
+
+  // ── TAB SWITCHING ──
+  function switchTab(tabId, btn) {
+    const parent = btn.closest('.visual-card');
+    parent.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
+    parent.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    document.getElementById(tabId).classList.add('active');
+  }
+
+  // ── PARTICLES ──
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const container = document.getElementById('particles');
+    const colors    = ['var(--blue)', 'var(--green)', 'var(--purple)'];
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left     = Math.random() * 100 + '%';
+      p.style.bottom   = '-10px';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDuration  = (6 + Math.random() * 8) + 's';
+      p.style.animationDelay     = (Math.random() * 6) + 's';
+      p.style.width = p.style.height = (2 + Math.random() * 4) + 'px';
+      container.appendChild(p);
+    }
+  }
+
+  // ── SMOOTH SCROLL ──
+  function scrollTo(selector) {
+    const el = document.querySelector(selector);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── SCROLL CHAPTERS HIGHLIGHT ──
+  const chapters = document.querySelectorAll('.scroll-chapter');
+  const chapterObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        chapters.forEach(c => c.classList.remove('active'));
+        e.target.classList.add('active');
+      }
+    });
+  }, { threshold: 0.6 });
+  chapters.forEach(c => chapterObserver.observe(c));
+</script>
+</body>
+</html>
